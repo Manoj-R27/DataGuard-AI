@@ -78,7 +78,7 @@ try:
             st.info("No batches have been ingested yet.")
         else:
             table = pd.DataFrame(batches)
-            st.dataframe(table[["batch_id", "severity", "drift_score", "created_at"]], use_container_width=True, hide_index=True)
+            st.dataframe(table[["batch_id", "severity", "drift_score", "created_at"]], width="stretch", hide_index=True)
             selected = st.selectbox("Inspect batch", table["batch_id"].tolist())
             report_response, report = fetch_json(f"/batches/{selected}/report")
             if report_response.ok:
@@ -89,9 +89,9 @@ try:
                 report_columns[2].metric("Flagged columns", sum(event["flagged"] for event in drift.get("columns", [])))
                 detail_tabs = st.tabs(["Column drift", "Root causes", "Impact estimate"])
                 with detail_tabs[0]:
-                    st.dataframe(pd.DataFrame(drift["columns"]), use_container_width=True, hide_index=True)
+                    st.dataframe(pd.DataFrame(drift["columns"]), width="stretch", hide_index=True)
                 with detail_tabs[1]:
-                    st.dataframe(pd.DataFrame(report["root_causes"]), use_container_width=True, hide_index=True)
+                    st.dataframe(pd.DataFrame(report["root_causes"]), width="stretch", hide_index=True)
                 with detail_tabs[2]:
                     st.json(report["impact"])
 
@@ -109,7 +109,7 @@ try:
             if breakdown:
                 breakdown_df = pd.DataFrame.from_dict(breakdown, orient="index")
                 columns = [column for column in ["corruption", "severity", "precision", "recall", "f1", "false_positive_rate"] if column in breakdown_df]
-                st.dataframe(breakdown_df[columns], use_container_width=True)
+                st.dataframe(breakdown_df[columns], width="stretch")
         elif eval_response.status_code == 401:
             st.info("Enter the configured API key in the sidebar to view detector quality.")
         else:
