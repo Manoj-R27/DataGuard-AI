@@ -1,0 +1,17 @@
+fastapi
+uvicorn[standard]
+pandas
+numpy
+scipy
+scikit-learn
+sqlalchemy
+psycopg[binary]
+pydantic
+requests
+python-dotenv
+streamlit
+pytest
+httpx
+python-multipart
+prometheus-client
+prometheus-fastapi-instrumentator

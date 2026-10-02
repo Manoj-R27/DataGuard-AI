@@ -1,0 +1,33 @@
+services:
+  api:
+    build: .
+    ports: ["8000:8000"]
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-dataguard}:${POSTGRES_PASSWORD:-dataguard}@postgres:5432/${POSTGRES_DB:-dataguard}
+      DATAGUARD_API_KEY: ${DATAGUARD_API_KEY:?Copy .env.example to .env and set DATAGUARD_API_KEY}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      DATAGUARD_LOG_LEVEL: ${DATAGUARD_LOG_LEVEL:-INFO}
+    depends_on:
+      postgres:
+        condition: service_healthy
+  dashboard:
+    build: .
+    command: streamlit run dashboard.py --server.address 0.0.0.0
+    ports: ["8501:8501"]
+    environment:
+      DATAGUARD_API_URL: http://api:8000
+      DATAGUARD_API_KEY: ${DATAGUARD_API_KEY:?Copy .env.example to .env and set DATAGUARD_API_KEY}
+    depends_on:
+      api:
+        condition: service_started
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-dataguard}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dataguard}
+      POSTGRES_DB: ${POSTGRES_DB:-dataguard}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-dataguard} -d ${POSTGRES_DB:-dataguard}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
