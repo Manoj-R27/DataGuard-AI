@@ -97,8 +97,18 @@ try:
 
     with validation_tab:
         st.subheader("Detector quality")
-        eval_response, eval_data = fetch_json("/evaluation", timeout=20, authenticated=True)
-        if eval_response.ok:
+        st.caption("Evaluation runs are intentionally on demand because they execute repeated seeded trials.")
+        run_evaluation = st.button("Run detector evaluation", type="primary")
+        eval_data = st.session_state.get("evaluation")
+        if run_evaluation:
+            with st.spinner("Running seeded detector evaluation..."):
+                eval_response, eval_data = fetch_json("/evaluation", timeout=180, authenticated=True)
+            if eval_response.ok:
+                st.session_state["evaluation"] = eval_data
+            else:
+                st.error(eval_data.get("detail", "Evaluation could not be completed."))
+                eval_data = None
+        if eval_data:
             overall = eval_data.get("overall", {})
             quality_columns = st.columns(4)
             quality_columns[0].metric("Precision", f"{overall.get('precision', 0):.1%}")
@@ -110,10 +120,8 @@ try:
                 breakdown_df = pd.DataFrame.from_dict(breakdown, orient="index")
                 columns = [column for column in ["corruption", "severity", "precision", "recall", "f1", "false_positive_rate"] if column in breakdown_df]
                 st.dataframe(breakdown_df[columns], width="stretch")
-        elif eval_response.status_code == 401:
-            st.info("Enter the configured API key in the sidebar to view detector quality.")
         else:
-            st.info("No evaluation result is available yet. Run the protected evaluation endpoint first.")
+            st.info("No evaluation loaded. Click the button above to run the protected evaluation.")
 
 except requests.RequestException as exc:
     st.error(f"API unavailable at {API}. Start FastAPI before opening the dashboard.")
